@@ -6,16 +6,11 @@ import subprocess
 class CommitReader:
 
     def __init__(self):
-        self.closesPattern = re.compile(r"(?:closes(?::)?\s*(?:#)?([0-9]*))", re.IGNORECASE)
+        self.closesPattern = re.compile(r"(?:(?:closes|bug)(?::)?\s*(?:#)?([0-9]*))", re.IGNORECASE)
         self.changelogPattern = re.compile(r"changelog", re.IGNORECASE)
         self.commitPattern = re.compile(r"\s*(?:commit)?\s*(?P<Sha>[\w]{40})\n(?:Merge: (?P<Merge>([\w]*) ([\w]*))\n)?Author: (?P<Author>.*) <(?P<Email>[\w\-@.]*)>\nDate:\s*(?P<Date>[a-zA-Z\s]* [0-9:\s]* \+[0-9]{4})\n(?P<Body>.*)", re.DOTALL)
         self.testPattern = re.compile(r".*test.*", re.IGNORECASE|re.DOTALL)
-        self.ignorePattern = re.compile(r"(?:ignore)", re.IGNORECASE)
-
-
-
-
-
+        self.ignorePattern = re.compile(r"(ignore)|(Git-Dch(?::)? Ignore)", re.IGNORECASE)
 
     def processCommit(self, commit):
         result = self.commitPattern.match(commit)
@@ -49,13 +44,13 @@ class CommitReader:
         return parts
 
     def getCommits(self, params):
-        command = ["git", "log", params['since'] + '..']
+        command = ["git", "log", params['since'] + '..' + params['until']]
         output = subprocess.check_output(command)
         split = str(output).split('\ncommit ')
         commits = []
 
         for commitString in split:
             commit = self.processCommit(commitString)
-            if (commit['changelog'] or params['all'] is True) and bool(commit['merge']) is False and bool(commit['ignore']) is False:
+            if (commit['changelog'] or params['all'] is True or bool(commit['closes'])) and bool(commit['merge']) is False and bool(commit['ignore']) is False:
                 commits.append(commit)
         return commits
