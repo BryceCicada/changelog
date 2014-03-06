@@ -6,7 +6,7 @@ import subprocess
 class CommitReader:
 
     def __init__(self):
-        self.closesPattern = re.compile(r"(?:(?:closes|bug)(?::)?\s*(?:#)?([0-9]*))", re.IGNORECASE)
+        self.closesPattern = re.compile(r"(?:(?:closes|bug)(?::)?\s?(?:#)?([0-9]*))", re.IGNORECASE)
         self.changelogPattern = re.compile(r"changelog", re.IGNORECASE)
         self.commitPattern = re.compile(r"\s*(?:commit)?\s*(?P<Sha>[\w]{40})\n(?:Merge: (?P<Merge>([\w]*) ([\w]*))\n)?Author: (?P<Author>.*) <(?P<Email>[\w\-@.]*)>\nDate:\s*(?P<Date>[a-zA-Z\s]* [0-9:\s]* \+[0-9]{4})\n(?P<Body>.*)", re.DOTALL)
         self.testPattern = re.compile(r".*test.*", re.IGNORECASE|re.DOTALL)

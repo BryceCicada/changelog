@@ -25,6 +25,8 @@ def usage(error):
         -s  --since=    Commitish to log from, Default HEAD
         -u  --until=    Commitish to log to, Default last commit
         -w  --wiki      output in wiki format
+        -a  --all       use all commits
+
 
     '''
     sys.exit(error)
