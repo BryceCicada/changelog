@@ -6,6 +6,8 @@ class Writer:
 
     def commitBodySection(self, commit, params):
         if params['wiki']:
+            if not 'onGit' in commit:
+                print str(commit)
             if commit['onGit']:
                 print("\t\t\t* [[" + self.github + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
             else:
@@ -34,7 +36,11 @@ class Writer:
                 print commit['test'].strip()
 
     def printBugSection(self, bugNumber, params, commits):
-        print '=== Commits ==='
+        if params['wiki']:
+            print '=== Commits ==='
+        else:
+            print 'Commits:'
+
         for commit in commits:
             self.commitBodySection(commit, params)
 
@@ -44,7 +50,10 @@ class Writer:
                 printTest = True
 
         if printTest:
-            print '=== Tests ==='
+            if params['wiki']:
+                print '=== Tests ==='
+            else:
+                print 'Tests:'
             for commit in commits:
                 self.testSection(commit, params)
         print ''
@@ -60,7 +69,7 @@ class Writer:
 
 
     def outputData(self, changesByCase, fogbugzNames, params):
-        if params['wiki']:
+        if params['wiki'] and len(changesByCase) > 0:
             print '======= Resolved Bugz ======='
             for caseId in changesByCase.keys():
                 if caseId and fogbugzNames[caseId] != 'NOT-FOUND':
@@ -77,7 +86,7 @@ class Writer:
                 else:
                     print "======" + caseId + ' ' + fogbugzNames[caseId] + '======'
             else:
-                print  caseId + ' ' + commit['bugname']
+                print  caseId + " " + fogbugzNames[caseId]
 
             self.printBugSection(caseId, params, commit)
 

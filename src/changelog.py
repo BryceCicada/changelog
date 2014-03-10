@@ -1,18 +1,16 @@
 #!/usr/bin/python
 
 import sys, subprocess, getopt, re
-from urllib2 import Request, urlopen, URLError, HTTPError
-import xml.etree.ElementTree as ET
+
 import ConfigParser, os
 from bs4 import BeautifulSoup
 from changelog.commitReader import CommitReader
 from changelog.Writer import Writer
-
-
+from changelog.evaluator import Evaluator
+from changelog.requestWrapper import RequestWrapper
 
 fogbugzAPI = 'https://we7.fogbugz.com/api.asp'
 githubAPI = 'https://api.github.com'
-
 
 fogbugz = 'https://we7.fogbugz.com/f/'
 github = 'https://github.com/we7/mediagraft/commit/'
@@ -26,13 +24,11 @@ def usage(error):
         -u  --until=    Commitish to log to, Default last commit
         -w  --wiki      output in wiki format
         -a  --all       use all commits
-
-
     '''
     sys.exit(error)
 
 def readInput(argv):
-    params = {'since': 'HEAD~1', 'until': '', 'wiki': False, 'all': False}
+    params = {'since': 'HEAD', 'until': '', 'wiki': False, 'all': False}
     try:
         opts, args = getopt.getopt(argv,"hwas:u:",["since=","until=","wiki","all"])
     except getopt.GetoptError:
@@ -51,33 +47,6 @@ def readInput(argv):
     return params
 
 
-
-def call(request):
-    #print 'calling:' + request
-    result = {}
-    try:
-        response = urlopen(request)
-        result['body'] = response.read()
-        result['code'] = response.getcode()
-        #print 'got code' + str(result['code'])
-    except HTTPError, e:
-        result['code'] = e.getcode()
-        #print 'got code' + str(result['code'])
-        result['body'] = ''
-    except URLError, e:
-        print 'No kittez. Got an error code:', e
-        exit(1)
-    return result
-
-def getCaseName(case, params):
-        url = fogbugzAPI + '?cmd=search&token=' + params['token'] + '&q=' + case + '&cols=sTitle'
-        result = call(url)['body']
-        try:
-            bugname = soup = BeautifulSoup(result, "xml").find('sTitle').text
-        except AttributeError, e:
-            bugname = 'NOT-FOUND'
-        return bugname
-
 def addorAppendCommit(bug, changesByBug, commit):
     commitsForBug = []
     if bug in changesByBug:
@@ -89,30 +58,24 @@ def addorAppendCommit(bug, changesByBug, commit):
 def ArrangeCommitsByBug(commits):
     changesByBug = {}
     for commit in commits:
-        for bug in commit['closes']:
-
-            addorAppendCommit(bug, changesByBug, commit)
-        if not commit['closes']:
+        if 'closes' in commit:
+            for bug in commit['closes']:
+                addorAppendCommit(bug, changesByBug, commit)
+        else:
             addorAppendCommit('', changesByBug, commit)
 
     return changesByBug
 
-
-
-
-
-
-def getFogbugzToken(config, params):
+def getFogbugzToken(config, params, requestWrapper):
 
     url = fogbugzAPI + '?cmd=logon&email=' + config.get("fogbugz", "username") + '&password=' + config.get("fogbugz", "password")
-    soup = BeautifulSoup(call(url)['body'], "xml")
+    soup = BeautifulSoup(requestWrapper.call(url)['body'], "xml")
     try:
         token = soup.find('token').text
     except AttributeError, e:
         print 'fogbugz login error'
         exit(0)
     return token
-
 
 def main(argv):
 
@@ -121,30 +84,20 @@ def main(argv):
     config = ConfigParser.ConfigParser()
     config.readfp(open(params['config']))
 
+    requestWrapper = RequestWrapper()
+
     params['gitToken'] = config.get("github", "token")
-
-
-
-    params['token'] = getFogbugzToken(config, params)
+    params['gitApi'] = githubAPI
+    params['fogBugzToken'] = getFogbugzToken(config, params, requestWrapper)
+    params['fogBugzApi'] = fogbugzAPI
 
     commits = CommitReader().getCommits(params)
 
-    fogbugzNames = {}
-    for commit in commits:
-        if commit['closes']:
-            for caseId in commit['closes']:
-                if not caseId in fogbugzNames:
-                    fogbugzNames[caseId] = getCaseName(caseId, params)
-        if call(githubAPI + '/repos/we7/mediagraft/git/commits/' + commit['sha'] + '?access_token=' +params['gitToken'])['code'] == 200:
-            commit['onGit'] = True
-            #print 'yes'
-        else:
-            commit['onGit'] = False
-            #print 'no'
+    (commits, fogBugzNames) = Evaluator().evaluate(commits, params, requestWrapper)
 
     commitsByBugNumber = ArrangeCommitsByBug(commits)
-
-    Writer().outputData(commitsByBugNumber, fogbugzNames, params)
+    print "Generating Release notes from " + params['since'] + ' to ' + params['until']
+    Writer().outputData(commitsByBugNumber, fogBugzNames, params)
 
 
 if __name__ == "__main__":
