@@ -34,7 +34,7 @@ def readInput(argv):
     except getopt.GetoptError:
         usage(2)
     for opt, arg in opts:
-        if opt == ("-h", "--help"):
+        if opt in ("-h", "--help"):
             usage(0)
         elif opt in ("-w", "--wiki"):
             params['wiki'] = True

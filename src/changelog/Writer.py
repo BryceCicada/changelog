@@ -13,7 +13,7 @@ class Writer:
             else:
                 print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
             if commit['strippedBody']:
-                print '<code>' + commit['strippedBody'] + '</code>'
+                print '<WRAP><code>' + commit['strippedBody'] + '</code></WRAP>'
             else:
                 print ''
         else:
@@ -30,7 +30,7 @@ class Writer:
                     print("\t\t\t* [[" + self.github + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
                 else:
                     print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
-                print '<code>' + commit['test'] + '</code>'
+                print '<WRAP><code>' + commit['test'] + '</code></WRAP>'
             else:
                 print "\t\t\t* [" + commit['sha'] + '] ' + commit['author']
                 print commit['test'].strip()
@@ -62,9 +62,11 @@ class Writer:
         for commit in commits:
             self.commitBodySection(commit, params)
             if 'test' in commit:
-                print '=== Tests ==='
+                if params['wiki']:
+                    print '=== Test ==='
+                else:
+                    print 'Test:'
                 self.testSection(commit, params)
-
         print ''
 
 
@@ -91,5 +93,8 @@ class Writer:
             self.printBugSection(caseId, params, commit)
 
         if '' in changesByCase:
-            print '====== Other Changes ======'
+            if params['wiki']:
+                print '====== Other Changes ======'
+            else:
+                print 'Other Changes'
             self.printOtherSection('', params, changesByCase[''])
