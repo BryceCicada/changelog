@@ -3,10 +3,10 @@ import re
 
 class Evaluator:
     def __init__(self):
-        self.closesPattern = re.compile(r"(?:\b(?:closes|#bug)(?::)?\s?(?:#)?([0-9]*))", re.IGNORECASE)
-        self.changelogPattern = re.compile(r"\bchangelog", re.IGNORECASE)
-        self.testPattern = re.compile(r'\btest(?:s)?:', re.IGNORECASE|re.DOTALL)
-        self.ignorePattern = re.compile(r"\b(#ignore)|(Git-Dch(?::)? Ignore)", re.IGNORECASE)
+        self.closesPattern = re.compile(r"(?:\b(?:closes|(?:#|!)bug)(?::)?\s?(?:#)?([0-9]*))", re.IGNORECASE)
+        self.changelogPattern = re.compile(r"\b(?:#|!)changelog", re.IGNORECASE)
+        self.testPattern = re.compile(r'\b(?:#|!)test(?:s)?:', re.IGNORECASE|re.DOTALL)
+        self.ignorePattern = re.compile(r"\b((?:#|!)ignore)|(Git-Dch(?::)? Ignore)", re.IGNORECASE)
 
     def getCaseName(self, case, params, requestWrapper):
         url = params['fogBugzApi'] + '?cmd=search&token=' + params['fogBugzToken'] + '&q=' + case + '&cols=sTitle'
