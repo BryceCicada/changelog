@@ -2,14 +2,14 @@ __author__ = 'arthur'
 
 class Writer:
     def __init__(self):
-        self.github = 'https://github.com/we7/mediagraft/commit/'
+        pass
 
     def commitBodySection(self, commit, params):
         if params['wiki']:
             if not 'onGit' in commit:
                 print str(commit)
             if commit['onGit']:
-                print("\t\t\t* [[" + self.github + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
+                print("\t\t\t* [[" + params['gitRepoUrl'] + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
             else:
                 print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
             if commit['strippedBody']:
@@ -27,7 +27,7 @@ class Writer:
         if 'test' in commit:
             if params['wiki']:
                 if commit['onGit']:
-                    print("\t\t\t* [[" + self.github + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
+                    print("\t\t\t* [[" + params['gitRepoUrl'] + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
                 else:
                     print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
                 print '<WRAP><code>' + commit['test'] + '</code></WRAP>'
