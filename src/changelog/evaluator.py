@@ -48,7 +48,8 @@ class Evaluator:
                         fogBugzNames[caseId] = name
                         commit['bugname'] = name
 
-            if requestWrapper.call(params['gitApi'] + '/repos/we7/mediagraft/git/commits/' + commit['sha'] + '?access_token=' +params['gitToken'])['code'] == 200:
+            uri = params['gitApi'] + '/repos/we7/' + params['gitRepo'] + '/git/commits/' + commit['sha'] + '?access_token=' + params['gitToken']
+            if requestWrapper.call(uri)['code'] == 200:
                 commit['onGit'] = True
             else:
                 commit['onGit'] = False

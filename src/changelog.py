@@ -87,6 +87,9 @@ def main(argv):
     requestWrapper = RequestWrapper()
 
     params['gitToken'] = config.get("github", "token")
+    params['gitRepo'] = config.get("github", "repository")
+    params['gitRepoUrl'] = 'https://github.com/we7/' + params['gitRepo'] + '/commit/'
+
     params['gitApi'] = githubAPI
     params['fogBugzToken'] = getFogbugzToken(config, params, requestWrapper)
     params['fogBugzApi'] = fogbugzAPI
