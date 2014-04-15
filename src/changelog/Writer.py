@@ -2,16 +2,18 @@ __author__ = 'arthur'
 
 class Writer:
     def __init__(self):
-        self.github = 'https://github.com/we7/mediagraft/commit/'
+        pass
 
     def commitBodySection(self, commit, params):
         if params['wiki']:
+            if not 'onGit' in commit:
+                print str(commit)
             if commit['onGit']:
-                print("\t\t\t* [[" + self.github + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
+                print("\t\t\t* [[" + params['gitRepoUrl'] + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
             else:
                 print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
             if commit['strippedBody']:
-                print '<code>' + commit['strippedBody'] + '</code>'
+                print '<WRAP><code>' + commit['strippedBody'] + '</code></WRAP>'
             else:
                 print ''
         else:
@@ -25,16 +27,20 @@ class Writer:
         if 'test' in commit:
             if params['wiki']:
                 if commit['onGit']:
-                    print("\t\t\t* [[" + self.github + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
+                    print("\t\t\t* [[" + params['gitRepoUrl'] + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
                 else:
                     print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
-                print '<code>' + commit['test'] + '</code>'
+                print '<WRAP><code>' + commit['test'] + '</code></WRAP>'
             else:
                 print "\t\t\t* [" + commit['sha'] + '] ' + commit['author']
                 print commit['test'].strip()
 
     def printBugSection(self, bugNumber, params, commits):
-        print '=== Commits ==='
+        if params['wiki']:
+            print '=== Commits ==='
+        else:
+            print 'Commits:'
+
         for commit in commits:
             self.commitBodySection(commit, params)
 
@@ -44,7 +50,10 @@ class Writer:
                 printTest = True
 
         if printTest:
-            print '=== Tests ==='
+            if params['wiki']:
+                print '=== Tests ==='
+            else:
+                print 'Tests:'
             for commit in commits:
                 self.testSection(commit, params)
         print ''
@@ -53,14 +62,16 @@ class Writer:
         for commit in commits:
             self.commitBodySection(commit, params)
             if 'test' in commit:
-                print '=== Tests ==='
+                if params['wiki']:
+                    print '=== Test ==='
+                else:
+                    print 'Test:'
                 self.testSection(commit, params)
-
         print ''
 
 
     def outputData(self, changesByCase, fogbugzNames, params):
-        if params['wiki']:
+        if params['wiki'] and len(changesByCase) > 0:
             print '======= Resolved Bugz ======='
             for caseId in changesByCase.keys():
                 if caseId and fogbugzNames[caseId] != 'NOT-FOUND':
@@ -73,14 +84,17 @@ class Writer:
             if params['wiki']:
                 if fogbugzNames[caseId] != 'NOT-FOUND':
                     print "======" + caseId + ' ' + fogbugzNames[caseId] + '======'
-                    print "Fogbugz case:" + '[[https://we7.fogbugz.com/f/cases/' + caseId + '|' + caseId + ' ' + fogbugzNames[caseId] + ']]'
+                    print "Fogbugz case: " + '[[https://we7.fogbugz.com/f/cases/' + caseId + '|' + caseId + ' ' + fogbugzNames[caseId] + ']]'
                 else:
                     print "======" + caseId + ' ' + fogbugzNames[caseId] + '======'
             else:
-                print  caseId + ' ' + commit['bugname']
+                print  caseId + " " + fogbugzNames[caseId]
 
             self.printBugSection(caseId, params, commit)
 
         if '' in changesByCase:
-            print '====== Other Changes ======'
+            if params['wiki']:
+                print '====== Other Changes ======'
+            else:
+                print 'Other Changes'
             self.printOtherSection('', params, changesByCase[''])
