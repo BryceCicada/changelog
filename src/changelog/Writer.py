@@ -13,7 +13,7 @@ class Writer:
             else:
                 print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
             if commit['strippedBody']:
-                print '<WRAP><code>' + commit['strippedBody'] + '</code></WRAP>'
+                print '<WRAP  prewrap><code>' + commit['strippedBody'] + '</code></WRAP>'
             else:
                 print ''
         else:
@@ -30,7 +30,7 @@ class Writer:
                     print("\t\t\t* [[" + params['gitRepoUrl'] + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
                 else:
                     print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
-                print '<WRAP><code>' + commit['test'] + '</code></WRAP>'
+                print '<WRAP  prewrap><code>' + commit['test'] + '</code></WRAP>'
             else:
                 print "\t\t\t* [" + commit['sha'] + '] ' + commit['author']
                 print commit['test'].strip()
