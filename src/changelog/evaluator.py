@@ -3,10 +3,10 @@ import re
 
 class Evaluator:
     def __init__(self):
-        self.closesPattern = re.compile(r"(?:\b(?:closes|(?:#|!)bug)(?::)?\s?(?:#)?([0-9]*))", re.IGNORECASE)
-        self.changelogPattern = re.compile(r"\b(?:#|!)changelog", re.IGNORECASE)
-        self.testPattern = re.compile(r'\b(?:#|!)test(?:s)?:', re.IGNORECASE|re.DOTALL)
-        self.ignorePattern = re.compile(r"\b((?:#|!)ignore)|(Git-Dch(?::)? Ignore)", re.IGNORECASE)
+        self.closesPattern = re.compile(r"(?:closes|!bug)(?::)?\s?(?:#)?([0-9]+)", re.IGNORECASE)
+        self.changelogPattern = re.compile(r"!changelog", re.IGNORECASE)
+        self.testPattern = re.compile(r'!test(?:s)?:', re.IGNORECASE|re.DOTALL)
+        self.ignorePattern = re.compile(r"(!ignore)", re.IGNORECASE)
 
     def getCaseName(self, case, params, requestWrapper):
         url = params['fogBugzApi'] + '?cmd=search&token=' + params['fogBugzToken'] + '&q=' + case + '&cols=sTitle'
@@ -46,7 +46,7 @@ class Evaluator:
                     if not caseId in fogBugzNames:
                         name = self.getCaseName(caseId, params,requestWrapper)
                         fogBugzNames[caseId] = name
-                        commit['bugname'] = name
+                    commit['bugname'] = fogBugzNames[caseId]
 
             uri = params['gitApi'] + '/repos/we7/' + params['gitRepo'] + '/git/commits/' + commit['sha'] + '?access_token=' + params['gitToken']
             if requestWrapper.call(uri)['code'] == 200:
