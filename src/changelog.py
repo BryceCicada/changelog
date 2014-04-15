@@ -16,14 +16,52 @@ fogbugz = 'https://we7.fogbugz.com/f/'
 github = 'https://github.com/we7/mediagraft/commit/'
 
 def usage(error):
-    print '''Changelog
-    test.py -s<commitish>|--since<commitish>
+    print '''NAME
+    changelog
 
-        -h  --help      This Help
-        -s  --since=    Commitish to log from, Default HEAD
-        -u  --until=    Commitish to log to, Default last commit
-        -w  --wiki      output in wiki format
-        -a  --all       use all commits
+SYNOPSIS
+    changelog [OPTION]...
+
+DESCRIPTION
+
+    Formats the git log output, creating a bug centric listing, binds to custom key words.
+
+OPTIONS
+    -h  --help      This Help
+    -s  --since=    Commitish to log from, Default HEAD
+    -u  --until=    Commitish to log to, Default last commit
+    -w  --wiki      output in wiki format
+    -a  --all       use all commits
+
+KEYWORDS
+    Note: all keywords are case insensitive.
+
+    !bug[:][ ][#]<id>
+        Bind this commit to the given Fogbugz case. Implies changelog
+        E.G.
+            !Bug: 123456
+
+    !changelog
+        Add this to the changelog, Implied by bug
+
+    !test[s]:
+        List given tests for this commit, Note: Tests must be the last keyword. all text after test, is part of test.
+        E.G.
+            !tests:
+            do some thing
+            Verify some thing
+
+    !ignore
+        Do Not list this change in the release notes
+
+EXAMPLE COMMIT
+    added new track api
+    new track api that provides track info
+    !Bug: 123123
+    !Tests:
+        call this url: blah blah
+        ensure that the json retrieved is
+        blah blah
     '''
     sys.exit(error)
 
