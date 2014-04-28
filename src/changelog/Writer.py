@@ -4,63 +4,71 @@ class Writer:
     def __init__(self):
         pass
 
-    def commitBodySection(self, commit, params):
+    def wrapCode(self, commit):
+        return '<WRAP  prewrap><code>' + commit + '</code></WRAP>'
+
+    def commitsTitle(self, params):
         if params['wiki']:
-            if not 'onGit' in commit:
-                print str(commit)
-            if commit['onGit']:
-                print("\t\t\t* [[" + params['gitRepoUrl'] + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
-            else:
-                print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
-            if commit['strippedBody']:
-                print '<WRAP  prewrap><code>' + commit['strippedBody'] + '</code></WRAP>'
-            else:
-                print ''
+            return '=== Commits ==='
         else:
-            print("\t\t\t* [" + commit['sha'] + '] ' + commit['author']),
-            if commit['strippedBody']:
-                print commit['strippedBody']
+            return 'Commits:'
+
+    def testsTitle(self, params):
+        if params['wiki']:
+            return '=== Tests ==='
+        else:
+            return 'Tests:'
+
+    def getShaLinkOrText(self, commit, params):
+        if params['wiki']:
+            if commit['onGit']:
+                return "\t\t\t* [[" + params['gitRepoUrl'] + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']
             else:
-                print ''
+                return "\t\t\t* " + commit['sha'] + ' ' + commit['author']
+        else:
+            return("\t\t\t* [" + commit['sha'] + '] ' + commit['author']),
+
+    def getCommitBody(self, commit, params):
+        if commit['strippedBody']:
+            if params['wiki']:
+                return self.wrapCode(commit['strippedBody'])
+            else:
+                return commit['strippedBody']
+        else:
+            print ''
+
+    def printCommitSection(self, commit, params):
+        print (self.getShaLinkOrText(commit, params)),
+        print self.getCommitBody(commit, params)
 
     def testSection(self, commit, params):
         if 'test' in commit:
-            if params['wiki']:
-                if commit['onGit']:
-                    print("\t\t\t* [[" + params['gitRepoUrl'] + commit['sha'] + '|[' + commit['sha'][:5] + ']]] ' + commit['author']),
-                else:
-                    print("\t\t\t* " + commit['sha'] + ' ' + commit['author']),
-                print '<WRAP  prewrap><code>' + commit['test'] + '</code></WRAP>'
-            else:
-                print "\t\t\t* [" + commit['sha'] + '] ' + commit['author']
-                print commit['test'].strip()
+            print (self.getShaLinkOrText(commit, params)),
+            print self.wrapCode(commit['test'])
 
-    def printBugSection(self, bugNumber, params, commits):
-        if params['wiki']:
-            print '=== Commits ==='
-        else:
-            print 'Commits:'
 
-        for commit in commits:
-            self.commitBodySection(commit, params)
-
+    def testsForBug(self, commits):
         printTest = False
         for commit in commits:
             if 'test' in commit:
                 printTest = True
+        return printTest
 
-        if printTest:
-            if params['wiki']:
-                print '=== Tests ==='
-            else:
-                print 'Tests:'
+    def printNamedBugSection(self, bugNumber, params, commits):
+        print self.commitsTitle(params)
+
+        for commit in commits:
+            self.printCommitSection(commit, params)
+
+        if self.testsForBug(commits):
+            print self.testsTitle(params)
             for commit in commits:
                 self.testSection(commit, params)
         print ''
 
-    def printOtherSection(self, bugNumber, params, commits):
+    def printUnlistedBugSection(self, bugNumber, params, commits):
         for commit in commits:
-            self.commitBodySection(commit, params)
+            self.printCommitSection(commit, params)
             if 'test' in commit:
                 if params['wiki']:
                     print '=== Test ==='
@@ -69,6 +77,21 @@ class Writer:
                 self.testSection(commit, params)
         print ''
 
+    def printBugTitle(self, caseId, fogbugzNames, params):
+        if params['wiki']:
+            if fogbugzNames[caseId] != 'NOT-FOUND':
+                print "======" + caseId + ' ' + fogbugzNames[caseId] + '======'
+                print "Fogbugz case: " + '[[https://we7.fogbugz.com/f/cases/' + caseId + '|' + caseId + ' ' + fogbugzNames[caseId] + ']]'
+            else:
+                print "======" + caseId + ' ' + fogbugzNames[caseId] + '======'
+        else:
+            print  caseId + " " + fogbugzNames[caseId]
+
+    def getOtherChangesTitle(self, params):
+        if params['wiki']:
+            return '====== Other Changes ======'
+        else:
+            return 'Other Changes'
 
     def outputData(self, changesByCase, fogbugzNames, params):
         if params['wiki'] and len(changesByCase) > 0:
@@ -81,20 +104,9 @@ class Writer:
             if caseId == '':
                 continue
 
-            if params['wiki']:
-                if fogbugzNames[caseId] != 'NOT-FOUND':
-                    print "======" + caseId + ' ' + fogbugzNames[caseId] + '======'
-                    print "Fogbugz case: " + '[[https://we7.fogbugz.com/f/cases/' + caseId + '|' + caseId + ' ' + fogbugzNames[caseId] + ']]'
-                else:
-                    print "======" + caseId + ' ' + fogbugzNames[caseId] + '======'
-            else:
-                print  caseId + " " + fogbugzNames[caseId]
-
-            self.printBugSection(caseId, params, commit)
+            self.printBugTitle(caseId, fogbugzNames, params)
+            self.printNamedBugSection(caseId, params, commit)
 
         if '' in changesByCase:
-            if params['wiki']:
-                print '====== Other Changes ======'
-            else:
-                print 'Other Changes'
-            self.printOtherSection('', params, changesByCase[''])
+            print self.getOtherChangesTitle(params)
+            self.printUnlistedBugSection('', params, changesByCase[''])
